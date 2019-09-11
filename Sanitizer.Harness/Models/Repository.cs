@@ -46,6 +46,15 @@ namespace Sanitizer.Harness.Models
         public string number { get; set; }
     }
 
+    public class Release
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+        public string url { get; set; }
+        public DateTime modifiedOn { get; set; }
+        public bool isDeleted { get; set; }
+    }
+
 }
 
 
