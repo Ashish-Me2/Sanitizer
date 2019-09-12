@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sanitizer.Harness.Models
+namespace Sanitizer.Models
 {
     public class Repository
     {
