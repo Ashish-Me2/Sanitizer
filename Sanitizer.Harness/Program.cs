@@ -1,8 +1,10 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Sanitizer.BL;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace Sanitizer.Harness
 {
@@ -15,14 +17,13 @@ namespace Sanitizer.Harness
         //==========================================================================
 
         internal const string azureDevOpsResourceId = "499b84ac-1321-427f-aa17-267ca6975798"; //Constant value to target Azure DevOps. Do not change  
-        
+        static VSOHelper helper = new VSOHelper(azureDevOpsOrganizationUrl, clientId, replyUri);
 
         public static void Main(string[] args)
         {
             Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext ctx = GetAuthenticationContext(null);
             AuthenticationResult result = null;
             IPlatformParameters promptBehavior = new PlatformParameters(PromptBehavior.Auto);
-            VSOHelper helper = new VSOHelper(azureDevOpsOrganizationUrl, clientId, replyUri);
 
             try
             {
@@ -35,15 +36,16 @@ namespace Sanitizer.Harness
 
                 //Collect Branches for Repo
                 int counter = 0;
-                helper.RepoList.ForEach(r =>
-                {
-                    Console.WriteLine(String.Format("Processing repo {0} > {1}", ++counter, r.name));
-                    helper.ListBranchesForRepo(r);
-                    helper.ListBuildsForRepoBranch(r, "refs/heads/master");
-                });
+                //helper.RepoList.ForEach(r =>
+                //{
+                //    Console.WriteLine(String.Format("Processing repo {0} > {1}", ++counter, r.name));
+                //    helper.ListBranchesForRepo(r);
+                //    helper.ListBuildsForRepoBranch(r, "refs/heads/master");
+                //});
                 Console.WriteLine("Fetching all releases as per specified filters...");
                 helper.ListReleases(bearerAuthHeader, "HR-");
                 Console.WriteLine("--------------------------------------------------");
+                DumpCSV();
                 Console.WriteLine("-- DONE --");
                 Console.ReadLine();
             }
@@ -60,6 +62,23 @@ namespace Sanitizer.Harness
             {
 
             }
+        }
+
+        private static void DumpCSV()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("RelID,Release Name,ModifiedOn,URL");
+            helper.ReleasesList.ForEach(r => {
+                sb.Append(r.id);
+                sb.Append(",");
+                sb.Append(r.name);
+                sb.Append(",");
+                sb.Append(r.modifiedOn);
+                sb.Append(",");
+                sb.Append(r.url);
+                sb.AppendLine();
+            });
+            File.WriteAllText("ReleasesList.csv", sb.ToString());
         }
 
         private static Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext GetAuthenticationContext(string tenant)
